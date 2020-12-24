@@ -1,0 +1,12 @@
+<body>
+  <app-nav-menu></app-nav-menu>
+  <div class="container">
+    <!--<router-outlet></router-outlet>-->
+    <ag-grid-angular style="width: 1000px; height: 500px;"
+                     class="ag-theme-balham"
+                     [pagination]="true"
+                     [rowData]="rowData"
+                     [columnDefs]="columnDefs">
+    </ag-grid-angular>
+  </div>
+</body>
