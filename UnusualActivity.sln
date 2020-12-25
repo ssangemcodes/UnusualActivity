@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OptionRadarUI", "OptionRada
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OptionRadarUI-Ag", "OptionRadarUI-Ag\OptionRadarUI-Ag.csproj", "{742AE790-A468-4E9B-B644-499DE6DC6ABE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnusualActivity.Common", "Common\UnusualActivity.Common.csproj", "{D3394167-687B-4455-8C48-4CFB4F6F9E6E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnusualActivity.Common", "Common\UnusualActivity.Common.csproj", "{D3394167-687B-4455-8C48-4CFB4F6F9E6E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnusualActivityJob", "UnusualActivityJob\UnusualActivityJob.csproj", "{75C64CDD-13A7-47EB-8BF7-9102F3771E0A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{D3394167-687B-4455-8C48-4CFB4F6F9E6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D3394167-687B-4455-8C48-4CFB4F6F9E6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D3394167-687B-4455-8C48-4CFB4F6F9E6E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{75C64CDD-13A7-47EB-8BF7-9102F3771E0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{75C64CDD-13A7-47EB-8BF7-9102F3771E0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{75C64CDD-13A7-47EB-8BF7-9102F3771E0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{75C64CDD-13A7-47EB-8BF7-9102F3771E0A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

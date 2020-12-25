@@ -1,25 +1,18 @@
-using System;
-using System.IO;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System.Net.Http;
+﻿using System;
 using System.Collections.Generic;
-using Microsoft.Azure.Cosmos;
 using System.Configuration;
-using System.Net;
 using System.Linq;
-using UnusualActivity.Common;
+using System.Net;
+using System.Net.Http;
 using System.Threading;
+using Microsoft.Azure.Cosmos;
+using Newtonsoft.Json;
+using UnusualActivity.Common;
 
-namespace OptionActivityFunction
+namespace UnusualActivityJob
 {
-    public static class OptionActivity
-    {
+	class Program
+	{
         // The Azure Cosmos DB endpoint for running this sample.
         private static readonly string EndpointUri = ConfigurationManager.AppSettings["EndPointUri"];
 
@@ -39,125 +32,9 @@ namespace OptionActivityFunction
         private static string databaseId = "db";
         private static string containerId = "cOptionVolume";
 
-        [FunctionName("GetOABySymbol")]
-        public static async Task<IActionResult> GetOABySymbol([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req, ILogger log)
-        {
-            try
-            {
-
-                string name = req.Query["symbol"];
-                var qSymbols = name ?? string.Empty;
-
-                var listOfSymbols = name.Split(',');
-                var docs = new List<UOActivityDocument>();
-                var client = new HttpClient();
-
-                foreach (var symbol in listOfSymbols)
-                {
-                    var response = client.GetAsync(string.Format(@"https://api.tdameritrade.com/v1/marketdata/chains?apikey=6ANM3TCMXETNKQLNHSCYJCLYNGKHUHLS%40AMER.OAUTHAP&symbol={0}&contractType=ALL&strikeCount=100",symbol));
-                    var responseString = response.Result.Content.ReadAsStringAsync().Result;
-
-                    //string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-                    var data = JsonConvert.DeserializeObject<Security>(responseString);
-
-                    foreach (var expiration in data.Puts)
-                    {
-                        foreach (var strike in expiration.Value)
-                        {
-                            foreach (var contract in strike.Value)
-                            {
-                                var doc = new UOActivityDocument
-                                {
-                                    USymbol = data.USymbol,
-                                    OSymbol = contract.OSymbol,
-                                    Id = contract.OSymbol,
-                                    Description = contract.Description,
-                                    Strike = strike.Key,
-                                    StringExpirationDate = expiration.Key,
-                                    ExpirationDate = contract.ExpirationDate,
-                                    TotalVolume = contract.TotalVolume,
-                                    OpenInterest = contract.OpenInterest,
-                                    Delta = contract.Delta,
-                                    Gamma = contract.Gamma,
-                                    Rho = contract.Rho,
-                                    Theta = contract.Theta,
-                                    Vega = contract.Vega,
-                                    ContractType = "Put"
-                                };
-
-                                docs.Add(doc);
-                            }
-                        }
-                    }
-                    foreach (var expiration in data.Calls)
-                    {
-                        foreach (var strike in expiration.Value)
-                        {
-                            foreach (var contract in strike.Value)
-                            {
-                                var doc = new UOActivityDocument
-                                {
-                                    USymbol = data.USymbol,
-                                    OSymbol = contract.OSymbol,
-                                    Id = contract.OSymbol,
-                                    Description = contract.Description,
-                                    Strike = strike.Key,
-                                    StringExpirationDate = expiration.Key,
-                                    ExpirationDate = contract.ExpirationDate,
-                                    TotalVolume = contract.TotalVolume,
-                                    OpenInterest = contract.OpenInterest,
-                                    Delta = contract.Delta,
-                                    Gamma = contract.Gamma,
-                                    Rho = contract.Rho,
-                                    Theta = contract.Theta,
-                                    Vega = contract.Vega,
-                                    ContractType = "Call"
-                                };
-
-                                docs.Add(doc);
-                            }
-                        }
-                    }
-
-                    cosmosClient = new CosmosClient("https://optionvolumes.documents.azure.com:443/", "cYWKVAv33322EDySCxiMzVugsdge3Wc9Vh6eSOKTHK3p1WEyD8rRJLAmaRhzVbnmm9u9bnFRIf9DFIzo2CguRQ==", new CosmosClientOptions() { ApplicationName = "CosmosDBDotnetQuickstart" });
-                    database = await cosmosClient.CreateDatabaseIfNotExistsAsync(databaseId);
-                    container = await database.CreateContainerIfNotExistsAsync(containerId, "/USymbol", 400);
-
-                    foreach (var item in docs)
-                    {
-
-                        try
-                        {
-                            // Read the item to see if it exists.  
-                            ItemResponse<UOActivityDocument> itemDocResponse = await container.ReadItemAsync<UOActivityDocument>(item.OSymbol, new PartitionKey(item.USymbol));
-                            Console.WriteLine("Item in database with id: {0} already exists\n", item.USymbol);
-                            log.LogTrace("Item in database with id: {0} already exists\n", item.USymbol);
-                        }
-                        catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
-                        {
-                            // Create an item in the container representing the option activity. Note we provide the value of the partition key for this item, which is underlying symbol
-                            ItemResponse<UOActivityDocument> itemDocResponse = await container.CreateItemAsync(item, new PartitionKey(item.USymbol));
-
-                            // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
-                            Console.WriteLine("Created item in database with id: {0} Operation consumed {1} RUs.\n", itemDocResponse.Resource.Id, itemDocResponse.RequestCharge);
-                            log.LogTrace("Created item in database with id: {0} Operation consumed {1} RUs.\n", itemDocResponse.Resource.Id, itemDocResponse.RequestCharge);
-                        }
-
-                    }
-
-                }
-                return new OkObjectResult(JsonConvert.SerializeObject(docs));
-            }
-            catch (Exception ex)
-            {
-
-                throw ex;
-            }
-        }
-
-        [FunctionName("GetOAForAllFromConfig")]
-        public static async Task<IActionResult> GetOAForAllFromConfig([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req, ILogger log)
-        {
+        static void Main(string[] args)
+		{
+            var startTime = DateTime.UtcNow;
             var docs = new List<UOActivityDocument>();
             try
             {
@@ -165,16 +42,16 @@ namespace OptionActivityFunction
                 var dowSymbols = "MMM|AXP|AMGN|AAPL|BA|CAT|CVX|CSCO|KO|DIS|DOW|GS|HD|HON|IBM|INTC|JNJ|JPM|MCD|MRK|MSFT|NKE|PG|CRM|TRV|UNH|VZ|V|WBA|WMT";
                 var qqqSymbols = "AAPL|MSFT|AMZN|TSLA|FB|GOOGL|GOOG|NVDA|PYPL|ADBE|NFLX|CMCSA|INTC|PEP|CSCO|AVGO|QCOM|COST|TMUS|TXN|AMGN|CHTR|SBUX|AMD|INTU|ISRG|BKNG|MELI|MDLZ|MU|AMAT|FISV|ADP|JD|GILD|ZM|LRCX|CSX|ATVI|ADSK|VRTX|MRNA|BIDU|ADI|ILMN|REGN|LULU|MNST|DOCU|CTSH|NXPI|KDP|PDD|WDAY|KHC|MAR|EXC|ROST|ALGN|IDXX|EA|KLAC|BIIB|SNPS|EBAY|XLNX|CTAS|ASML|CDNS|WBA|XEL|MCHP|ALXN|SGEN|PAYX|DXCM|ORLY|VRSK|NTES|ANSS|PCAR|CPRT|FAST|SIRI|DLTR|SPLK|VRSN|SWKS|CERN|MXIM|TTWO|INCY|CDW|TCOM|EXPE|CHKP|BMRN|CTXS|ULTA|LBTYK|FOXA|FOX|LBTYA|QQQ";
 
-				//var listOfSymbols = new List<string> { "ABT" };
-				var listOfSymbols = spxSymbols.Split('|').ToList();
-				listOfSymbols.AddRange(dowSymbols.Split('|').ToList());
-				listOfSymbols.AddRange(qqqSymbols.Split('|').ToList());
-				var listOfDistinctSymbols = listOfSymbols.Distinct();
+                //var listOfSymbols = new List<string> { "AAPL", "AMD" };
+                var listOfSymbols = spxSymbols.Split('|').ToList();
+                listOfSymbols.AddRange(dowSymbols.Split('|').ToList());
+                listOfSymbols.AddRange(qqqSymbols.Split('|').ToList());
+                var listOfDistinctSymbols = listOfSymbols.Distinct();
 
                 var client = new HttpClient();
                 cosmosClient = new CosmosClient("https://optionvolumes.documents.azure.com:443/", "cYWKVAv33322EDySCxiMzVugsdge3Wc9Vh6eSOKTHK3p1WEyD8rRJLAmaRhzVbnmm9u9bnFRIf9DFIzo2CguRQ==", new CosmosClientOptions() { ApplicationName = "CosmosDBDotnetQuickstart" });
-                database = await cosmosClient.CreateDatabaseIfNotExistsAsync(databaseId);
-                container = await database.CreateContainerIfNotExistsAsync(containerId, "/USymbol", 400);
+                database = cosmosClient.CreateDatabaseIfNotExistsAsync(databaseId).Result;
+                container = database.CreateContainerIfNotExistsAsync(containerId, "/USymbol", 400).Result;
 
 
                 foreach (var symbol in listOfDistinctSymbols)
@@ -182,8 +59,8 @@ namespace OptionActivityFunction
                     try
                     {
                         var response = client.GetAsync(string.Format("https://api.tdameritrade.com/v1/marketdata/chains?apikey=6ANM3TCMXETNKQLNHSCYJCLYNGKHUHLS%40AMER.OAUTHAP&symbol={0}&contractType=ALL&strikeCount=100", symbol));
-                        if(response.Result.StatusCode == HttpStatusCode.TooManyRequests)
-						{
+                        if (response.Result.StatusCode == HttpStatusCode.TooManyRequests)
+                        {
                             Thread.Sleep(60000);
                             response = client.GetAsync(string.Format("https://api.tdameritrade.com/v1/marketdata/chains?apikey=6ANM3TCMXETNKQLNHSCYJCLYNGKHUHLS%40AMER.OAUTHAP&symbol={0}&contractType=ALL&strikeCount=100", symbol));
                         }
@@ -257,11 +134,10 @@ namespace OptionActivityFunction
                             try
                             {
                                 // Read the item to see if it exists.  
-                                ItemResponse<UOActivityDocument> itemDocResponse = await container.ReadItemAsync<UOActivityDocument>(item.OSymbol, new PartitionKey(item.USymbol));
-                                
+                                ItemResponse<UOActivityDocument> itemDocResponse = container.ReadItemAsync<UOActivityDocument>(item.OSymbol, new PartitionKey(item.USymbol)).Result;
+
                                 var previousItem = itemDocResponse.Resource;
                                 Console.WriteLine("Item in database with id: {0} already exists. Trying upsert\n", item.OSymbol);
-                                log.LogTrace("Item in database with id: {0} already exists. Trying upsert\n", item.OSymbol);
 
                                 item.PreviousRunDateTime = previousItem.LastRunDateTime;
                                 item.LastRunDateTime = DateTime.UtcNow;
@@ -277,25 +153,33 @@ namespace OptionActivityFunction
                                     item.PreviousOpenInterest = previousItem.OpenInterest;
                                 }
 
-                                ItemResponse<UOActivityDocument> itemDocUpsertResponse = await container.UpsertItemAsync(item, new PartitionKey(item.USymbol));
+                                ItemResponse<UOActivityDocument> itemDocUpsertResponse = container.UpsertItemAsync(item, new PartitionKey(item.USymbol)).Result;
 
                                 Console.WriteLine("{0} upsert successful.  {1} Upsert Operation consumed {2} RUs.\n", item.OSymbol, itemDocUpsertResponse.Resource.Id, itemDocUpsertResponse.RequestCharge);
-                                log.LogTrace("{0} upsert successful.  {1} Operation consumed {2} RUs.\n", item.OSymbol, itemDocUpsertResponse.Resource.Id, itemDocUpsertResponse.RequestCharge);
                             }
                             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
                             {
                                 // Create an item in the container representing the option activity. Note we provide the value of the partition key for this item, which is underlying symbol
-                                ItemResponse<UOActivityDocument> itemDocResponse = await container.CreateItemAsync(item, new PartitionKey(item.USymbol));
+                                ItemResponse<UOActivityDocument> itemDocResponse = container.CreateItemAsync(item, new PartitionKey(item.USymbol)).Result;
 
                                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
                                 Console.WriteLine("Created item in database with id: {0} Operation consumed {1} RUs.\n", itemDocResponse.Resource.Id, itemDocResponse.RequestCharge);
-                                log.LogTrace("Created item in database with id: {0} Operation consumed {1} RUs.\n", itemDocResponse.Resource.Id, itemDocResponse.RequestCharge);
                             }
                             catch (Exception ex)
                             {
-                                Console.WriteLine("Exception Occured: {0} \n", ex.Message);
-                                log.LogTrace("Exception Occured: {0} \n", ex.Message);
+                                var cosmosEx = ex.InnerException as CosmosException;
+                                if (cosmosEx != null && cosmosEx.StatusCode == HttpStatusCode.NotFound)
+                                {
+                                    // Create an item in the container representing the option activity. Note we provide the value of the partition key for this item, which is underlying symbol
+                                    ItemResponse<UOActivityDocument> itemDocResponse = container.CreateItemAsync(item, new PartitionKey(item.USymbol)).Result;
 
+                                    // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
+                                    Console.WriteLine("Created item in database with id: {0} Operation consumed {1} RUs.\n", itemDocResponse.Resource.Id, itemDocResponse.RequestCharge);
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Exception Occured: {0} \n", ex.Message);
+                                }
                             }
                         }
                         docs.Clear();
@@ -303,17 +187,13 @@ namespace OptionActivityFunction
                     catch (Exception ex)
                     {
                         Console.WriteLine("Exception Occured getting data for : {0} \n {1}", symbol, ex.Message);
-                        log.LogTrace("Exception Occured getting data for : {0} \n {1}", symbol, ex.Message);
                     }
                 }
-                return new OkObjectResult("Processing Complete");
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Exception Occured: {0} \n", ex.Message);
-                log.LogTrace("Exception Occured: {0} \n", ex.Message);
-                return new OkObjectResult("Processing Exception Occured");
+                Console.WriteLine("Exception Occured: {0} \n", ex.Message);                
             }
         }
-    }
+	}
 }
