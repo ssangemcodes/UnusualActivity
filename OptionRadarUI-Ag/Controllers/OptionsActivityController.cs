@@ -55,7 +55,7 @@ namespace OptionRadarUI_Ag.Controllers
             var sqlQueryText = "SELECT * FROM c";
 
             Console.WriteLine("Running query: {0}\n", sqlQueryText);
-
+            _logger.LogTrace("Running query: {0}\n", sqlQueryText);
             QueryDefinition queryDefinition = new QueryDefinition(sqlQueryText);
             FeedIterator<UOActivityDocument> queryResultSetIterator = container.GetItemQueryIterator<UOActivityDocument>(queryDefinition);
 
@@ -69,6 +69,7 @@ namespace OptionRadarUI_Ag.Controllers
                 {
                     activityDocs.Add(activityDoc);
                     Console.WriteLine("\tRead {0}\n", activityDoc);
+                    _logger.LogTrace("\tRead {0}\n", activityDoc);
                 }
             }
 
