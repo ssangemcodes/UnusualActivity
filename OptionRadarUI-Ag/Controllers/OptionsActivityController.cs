@@ -11,7 +11,7 @@ using UnusualActivity.Common;
 namespace OptionRadarUI_Ag.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class OptionsActivityController : ControllerBase
     {
         private static readonly string[] Summaries = new[]
@@ -52,7 +52,7 @@ namespace OptionRadarUI_Ag.Controllers
             database = cosmosClient.CreateDatabaseIfNotExistsAsync(databaseId).Result;
             container = database.CreateContainerIfNotExistsAsync(containerId, "/USymbol", 400).Result;
 
-            var sqlQueryText = "SELECT * FROM c";
+            var sqlQueryText = "SELECT * FROM c where c.Expiry > GetCurrentDateTime()";
 
             Console.WriteLine("Running query: {0}\n", sqlQueryText);
             _logger.LogTrace("Running query: {0}\n", sqlQueryText);

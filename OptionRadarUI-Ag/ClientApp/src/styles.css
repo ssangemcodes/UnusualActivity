@@ -16,3 +16,35 @@ code {
   background-color: #1b6ec2;
   border-color: #1861ac;
 }
+
+/*For loading overlay*/
+
+.example-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+#myGrid {
+  flex: 1 1 0px;
+  width: 100%;
+}
+
+.fa-hourglass-half {
+  color: navy;
+  font-size: 18px;
+}
+
+.fa-frown {
+  color: navy;
+  font-size: 18px;
+}
+
+/*Cursor loaded*/
+
+.cursor-loader {
+  cursor: wait;
+  * {
+  cursor: wait !important;
+  }
+}
