@@ -53,6 +53,7 @@ namespace UnusualActivity.Common
         public long PreviousOpenInterest1 { get; set; }
         public long PreviousOpenInterest2 { get; set; }
         public long PreviousOpenInterest3 { get; set; }
+        public long OIDelta { get; set; }
 
 
     }

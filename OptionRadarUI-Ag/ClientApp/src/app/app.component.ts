@@ -33,6 +33,7 @@ export class AppComponent implements AfterViewInit {
       headerName: 'OpenInterest', field: 'OpenInterest', sortable: true, filter: 'agNumberColumnFilter'
     },
     { headerName: 'VolumeDelta', field: 'VolumeDelta', sortable: true },
+    { headerName: 'OIDelta', field: 'OIDelta', sortable: true },
     { headerName: 'ExpirationDate', field: 'Expiry', sortable: true },
     { headerName: 'Delta', field: 'Delta', sortable: true }
   ];

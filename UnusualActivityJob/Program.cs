@@ -143,7 +143,12 @@ namespace UnusualActivityJob
                                 item.LastRunDateTime = DateTime.UtcNow;
                                 item.VolumeAtPreviousRun = previousItem.TotalVolume;
                                 item.VolumeAtLastRun = item.TotalVolume;
-                                item.VolumeDelta = item.VolumeAtLastRun - item.VolumeAtPreviousRun;
+
+                                if (item.PreviousRunDateTime.Date == item.LastRunDateTime.Date)
+                                    item.VolumeDelta = 0;
+                                else
+                                { item.VolumeDelta = item.VolumeAtLastRun - item.VolumeAtPreviousRun; }
+                                
 
                                 if (item.OpenInterest != previousItem.OpenInterest)
                                 {
@@ -151,6 +156,7 @@ namespace UnusualActivityJob
                                     item.PreviousOpenInterest2 = previousItem.PreviousOpenInterest1;
                                     item.PreviousOpenInterest1 = previousItem.PreviousOpenInterest;
                                     item.PreviousOpenInterest = previousItem.OpenInterest;
+                                    item.OIDelta = item.PreviousOpenInterest - item.PreviousOpenInterest1;
                                 }
 
                                 ItemResponse<UOActivityDocument> itemDocUpsertResponse = container.UpsertItemAsync(item, new PartitionKey(item.USymbol)).Result;
